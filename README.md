@@ -2,9 +2,9 @@
 
 Official PyTorch code for our ICCV 2025 paper:
 
-**RainbowPrompt: Diversity-Enhanced-Prompt-Evolving-for-Continual-Learning**  
+**[RainbowPrompt: Diversity-Enhanced-Prompt-Evolving-for-Continual-Learning](https://www.arxiv.org/abs/2507.22553)**  
 *Kiseong Hong, Gyeong-hyeon Kim, Eunwoo Kim*  
-IEEE/CVF International Conference on Computer Vision (ICCV), 2025 [arXiv](https://www.arxiv.org/abs/2507.22553)
+IEEE/CVF International Conference on Computer Vision (ICCV), 2025
 
 
 ![RainbowPrompt Overview](./Overview.png)
