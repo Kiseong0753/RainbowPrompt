@@ -1,1 +1,1 @@
-# RainbowPrompt-Diversity-Enhanced-Prompt-Evolving-for-Continual-Learning
+# RainbowPrompt: Diversity-Enhanced-Prompt-Evolving-for-Continual-Learning
