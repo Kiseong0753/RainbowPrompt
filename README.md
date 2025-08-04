@@ -6,5 +6,7 @@
 *Kiseong Hong, Gyeong-hyeon Kim, Eunwoo Kim*  
 IEEE/CVF International Conference on Computer Vision (ICCV), 2025 [arXiv](https://www.arxiv.org/abs/2507.22553)
 
+
+![RainbowPrompt Overview](./Overview.png)
 ---
 
