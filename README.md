@@ -1,6 +1,6 @@
 # RainbowPrompt: Diversity-Enhanced-Prompt-Evolving-for-Continual-Learning
 
-[Official pyTorch code for the ICCV 2025 paper]  
+[Official pytorch code for the ICCV 2025 paper]  
 
 **RainbowPrompt: Diversity-Enhanced-Prompt-Evolving-for-Continual-Learning**  
 *Kiseong Hong, Gyeong-hyeon Kim, Eunwoo Kim*  
