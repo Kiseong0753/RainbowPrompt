@@ -15,13 +15,13 @@ Prompt-based continual learning provides a rehearsal-free solution by tuning sma
 
 
 ## Environment & Setup
+
+```bash
 conda create -n rainbow python=3.9 -y
 conda activate rainbow
 
 pip install -r requirements.txt
 
-Note
-All experiments were conducted under this environment. Minor version differences may lead to slightly different results.
 
 
 
