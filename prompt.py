@@ -57,10 +57,10 @@ class RainbowPrompt(nn.Module):
             ])
               
         for l in self.prompt_tune_idx:                
-            task_unique_knowledge = self.tensor_matrix(self.pool_size, self.length, self.embed_dim)
-            setattr(self, f'task_unique_knowledge_{l}', task_unique_knowledge)
-        task_unique_key = self.tensor_matrix(self.n_tasks, self.embed_dim, None)
-        setattr(self, f'task_unique_key', task_unique_key)
+            base_knowledge = self.tensor_matrix(self.pool_size, self.length, self.embed_dim)
+            setattr(self, f'base_knowledge_{l}', base_knowledge)
+        base_key = self.tensor_matrix(self.n_tasks, self.embed_dim, None)
+        setattr(self, f'base_key', base_key)
 
 
     def tensor_matrix(self, a, b, c):
@@ -96,19 +96,19 @@ class RainbowPrompt(nn.Module):
                 for param in layer.parameters():
                     param.requires_grad = False
     
-    def task_conditioning_step(self, task_unique_knowledge, current_task_embed):
+    def task_conditioning_step(self, base_knowledge, current_task_embed):
         if self.relation_type == 'attention':
             key_expanded = current_task_embed.unsqueeze(0).unsqueeze(0) 
-            key_expanded = key_expanded.expand(task_unique_knowledge.size(0), task_unique_knowledge.size(1), -1)  
-            relevance_scores = torch.matmul(task_unique_knowledge, key_expanded.transpose(-1, -2)) 
+            key_expanded = key_expanded.expand(base_knowledge.size(0), base_knowledge.size(1), -1)  
+            relevance_scores = torch.matmul(base_knowledge, key_expanded.transpose(-1, -2)) 
             relevance_scores = F.softmax(relevance_scores, dim=-1)  
-            conditioned_task_unique_knowledge = torch.matmul(relevance_scores, task_unique_knowledge)  
+            conditioned_base_knowledge = torch.matmul(relevance_scores, base_knowledge)  
         else:
-            relevance_scores = torch.einsum('nld,d->nl', task_unique_knowledge, current_task_embed)
+            relevance_scores = torch.einsum('nld,d->nl', base_knowledge, current_task_embed)
             relevance_scores = F.sigmoid(relevance_scores)
-            conditioned_task_unique_knowledge = torch.einsum('nl,nld->nld', relevance_scores, task_unique_knowledge)
+            conditioned_base_knowledge = torch.einsum('nl,nld->nld', relevance_scores, base_knowledge)
             
-        return conditioned_task_unique_knowledge  
+        return conditioned_base_knowledge  
     
     def Prompt_Evolution(self, layer, attended_prev, attended_curr, d_model, d_ff, dropout=0.1):
         def Attention_based_Transformation(q, k, v, d_model):
@@ -154,7 +154,7 @@ class RainbowPrompt(nn.Module):
                 out1 = F.layer_norm(prev + attn_output, [d_model]) 
                 return out1
         
-        task_wise_universe = []
+        task_wise_evolved_results = []
         if layer not in self.self_attn_idx:
             for KI_layer in range(self.task_id+1):
                 if KI_layer == self.task_id:
@@ -163,18 +163,18 @@ class RainbowPrompt(nn.Module):
                 else:
                     attended_p = attended_prev[KI_layer*self.top_k:KI_layer*self.top_k+self.top_k]
                     attended_c = attended_curr
-                attended_universal_knowledge = Evolving(self.task_id, attended_p, attended_c, d_model, d_ff, dropout)
-                task_wise_universe.append(attended_universal_knowledge)
-            final_universal = torch.cat(task_wise_universe, dim=0)
+                Evolved_knowledge = Evolving(self.task_id, attended_p, attended_c, d_model, d_ff, dropout)
+                task_wise_evolved_results.append(Evolved_knowledge)
+            final_representation = torch.cat(task_wise_evolved_results, dim=0)
         else:
             attended_p, attended_c = attended_curr, attended_curr
             for iteration in range(self.KI_iter):
-                attended_universal_knowledge = Evolving(self.task_id, attended_p, attended_c, d_model, d_ff, dropout)
-                attended_p = attended_universal_knowledge
-            final_universal = attended_universal_knowledge
+                Evolved_knowledge = Evolving(self.task_id, attended_p, attended_c, d_model, d_ff, dropout)
+                attended_p = Evolved_knowledge
+            final_representation = Evolved_knowledge
             
             
-        return final_universal
+        return final_representation
     
     
     
@@ -182,31 +182,31 @@ class RainbowPrompt(nn.Module):
         if p_type == 'Rainbow':
             out = dict()
             self.task_id = None
-            task_unique_knowledge = getattr(self, f'task_unique_knowledge_{layer}')
-            task_unique_key = getattr(self, f'task_unique_key')
+            base_knowledge = getattr(self, f'base_knowledge_{layer}')
+            base_key = getattr(self, f'base_key')
 
             if train:
                 self.task_id = cur_id
                 if self.task_id == 0:
-                    prev_unique_knowledge_set = task_unique_knowledge[self.task_id:self.top_k]
-                    curr_unique_knowledge_set = task_unique_knowledge[self.task_id:self.top_k]
-                    task_unique_key_set = task_unique_key[self.task_id]
+                    prev_base_knowledge = base_knowledge[self.task_id:self.top_k]
+                    curr_base_knowledge = base_knowledge[self.task_id:self.top_k]
+                    base_key_set = base_key[self.task_id]
                 else:
-                    prev_unique_knowledge_set = task_unique_knowledge[0:self.task_id*self.top_k].detach().clone()
-                    curr_unique_knowledge_set = task_unique_knowledge[self.task_id*self.top_k:self.task_id*self.top_k+self.top_k]
-                    task_unique_key_set = task_unique_key[self.task_id]
+                    prev_base_knowledge = base_knowledge[0:self.task_id*self.top_k].detach().clone()
+                    curr_base_knowledge = base_knowledge[self.task_id*self.top_k:self.task_id*self.top_k+self.top_k]
+                    base_key_set = base_key[self.task_id]
 
-                key_norm = self.l2_normalize(task_unique_key_set, dim=-1) 
+                key_norm = self.l2_normalize(base_key_set, dim=-1) 
                 embed_norm = self.l2_normalize(cls_features, dim=-1)
 
                 similarity = torch.matmul(key_norm, embed_norm.t()) 
                 similarity = torch.sum(similarity) / embed_norm.shape[0]
                 out['sim_loss'] = similarity
-                attended_prev_unique = self.task_conditioning_step(prev_unique_knowledge_set, key_norm) 
-                attended_curr_unique = self.task_conditioning_step(curr_unique_knowledge_set, key_norm) 
-                attended_universal_knowledge_set = self.Prompt_Evolution(layer, attended_prev_unique, attended_curr_unique, self.embed_dim, self.D1)
+                attended_prev_base = self.task_conditioning_step(prev_base_knowledge, key_norm) 
+                attended_curr_base = self.task_conditioning_step(curr_base_knowledge, key_norm) 
+                Evolved_knowledge_set = self.Prompt_Evolution(layer, attended_prev_base, attended_curr_base, self.embed_dim, self.D1)
 
-                RainbowPrompt = torch.mean(attended_universal_knowledge_set, dim=0)
+                RainbowPrompt = torch.mean(Evolved_knowledge_set, dim=0)
                 with torch.no_grad():
                     self.stored_rainbow_prompts[self.task_id, layer].copy_(RainbowPrompt)
                 RainbowPrompt = RainbowPrompt.expand(embed_norm.shape[0], -1, -1) 
@@ -218,7 +218,7 @@ class RainbowPrompt(nn.Module):
                 embed_norm = self.l2_normalize(cls_features, dim=-1)
                 matching_result = []
                 for certain_task in range(cur_id+1):
-                    certain_task_key = task_unique_key[certain_task]
+                    certain_task_key = base_key[certain_task]
                     certain_task_key = self.l2_normalize(certain_task_key, dim=-1)
                     sim_score = torch.matmul(certain_task_key, embed_norm.t())
                     sim_score = torch.sum(sim_score) / embed_norm.shape[0]
@@ -240,31 +240,29 @@ class RainbowPrompt(nn.Module):
         
         else:
             out = dict()
-            task_unique_knowledge = getattr(self, f'task_unique_knowledge_{layer}')
-            task_unique_key = getattr(self, f'task_unique_key')
+            base_knowledge = getattr(self, f'base_knowledge_{layer}')
+            base_key = getattr(self, f'base_key')
             self.task_id = cur_id
             
             if self.task_id == 0:
-                curr_unique_knowledge_set = task_unique_knowledge[self.task_id:self.top_k]
-                task_unique_key_set = task_unique_key[self.task_id]
+                curr_base_knowledge = base_knowledge[self.task_id:self.top_k]
+                base_key_set = base_key[self.task_id]
                 
             else:
-                curr_unique_knowledge_set = task_unique_knowledge[self.task_id*self.top_k:self.task_id*self.top_k+self.top_k]
-                task_unique_key_set = task_unique_key[self.task_id]
+                curr_base_knowledge = base_knowledge[self.task_id*self.top_k:self.task_id*self.top_k+self.top_k]
+                base_key_set = base_key[self.task_id]
                 
-            key_norm = self.l2_normalize(task_unique_key_set, dim=-1) 
+            key_norm = self.l2_normalize(base_key_set, dim=-1) 
             embed_norm = self.l2_normalize(cls_features, dim=-1)
             similarity = torch.matmul(key_norm, embed_norm.t()) 
             similarity = torch.sum(similarity) / embed_norm.shape[0]
             
             out['sim_loss'] = similarity
             
-            RainbowPrompt = torch.mean(curr_unique_knowledge_set, dim=0)
+            RainbowPrompt = torch.mean(curr_base_knowledge, dim=0)
             RainbowPrompt = RainbowPrompt.expand(embed_norm.shape[0], -1, -1) 
             key_prompt = RainbowPrompt[:, :int(self.length/2),:]
             value_prompt = RainbowPrompt[:,int(self.length/2):,:]
             out['batched_prompt'] = [key_prompt, value_prompt]
 
             return out
-
-
