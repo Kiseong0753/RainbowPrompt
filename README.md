@@ -50,6 +50,13 @@ bash run_cubs.sh
 
 ---
 
+## Results
+
+- **Training logs** (e.g., loss, accuracy, task-wise performance) are saved under the `logs/` directory.
+- **Model checkpoints** are stored in the directory specified by the `output_dir` argument in the parser.
+
+---
+
 ## Citation
 
 If you found our work useful for your research, please cite our work:
