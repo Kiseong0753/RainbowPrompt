@@ -21,9 +21,48 @@ conda create -n rainbow python=3.9 -y
 conda activate rainbow
 
 pip install -r requirements.txt
+```
 
+> **Note**  
+> All experiments were conducted under this environment.  
+> Minor version differences may lead to slightly different results.
 
+---
 
+## Training
+
+```bash
+# CIFAR-100 (10 tasks & 20 tasks)
+bash run_cifar100.sh
+
+# ImageNet-R (10 tasks & 20 tasks)
+bash run_imr.sh
+
+# CUB-200-2011 (10 tasks & 20 tasks)
+bash run_cubs.sh
+```
+
+> **Note**  
+> For each setting, we conducted **three independent runs with different random seeds**  
+> and reported the **average performance** in the paper.  
+> The default seed provided in this repository corresponds to **one of the seeds used**.
+
+---
+
+## Citation
+
+If you found our work useful for your research, please cite our work:
+
+```bibtex
+@InProceedings{Hong_2025_ICCV,
+    author    = {Hong, Kiseong and Kim, Gyeong-hyeon and Kim, Eunwoo},
+    title     = {RainbowPrompt: Diversity-Enhanced Prompt-Evolving for Continual Learning},
+    booktitle = {Proceedings of the IEEE/CVF International Conference on Computer Vision (ICCV)},
+    month     = {October},
+    year      = {2025},
+    pages     = {1130-1140}
+}
+```
 
 ---
 
