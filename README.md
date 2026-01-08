@@ -1,4 +1,4 @@
-## RainbowPrompt: Diversity-Enhanced Prompt-Evolving for Continual Learning
+## [ICCV 2025] RainbowPrompt: Diversity-Enhanced Prompt-Evolving for Continual Learning
 
 [Official PyTorch code]
 
