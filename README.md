@@ -1,6 +1,6 @@
 ## RainbowPrompt: Diversity-Enhanced Prompt-Evolving for Continual Learning [ICCV 2025]
 
-**[RainbowPrompt: Diversity-Enhanced Prompt-Evolving for Continual Learning](https://www.arxiv.org/abs/2507.22553)**  
+**[RainbowPrompt: Diversity-Enhanced Prompt-Evolving for Continual Learning](https://openaccess.thecvf.com/content/ICCV2025/papers/Hong_RainbowPrompt_Diversity-Enhanced_Prompt-Evolving_for_Continual_Learning_ICCV_2025_paper.pdf)**  
 *Kiseong Hong, Gyeong-hyeon Kim, Eunwoo Kim*  
 IEEE/CVF International Conference on Computer Vision (ICCV), 2025
 
