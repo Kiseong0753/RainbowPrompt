@@ -55,6 +55,13 @@ bash run_cubs.sh
 
 ---
 
+## Acknowledgement
+
+This repository is built upon the codebase of **[DualPrompt](https://github.com/JH-LEE-KR/dualprompt-pytorch)**. 
+We thank the authors for their valuable research and for making their code publicly available.
+
+---
+
 ## Citation
 
 If you found our work useful for your research, please cite our work:
